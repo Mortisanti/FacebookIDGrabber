@@ -21,7 +21,7 @@ namespace FacebookIDGrabber
 
         private void CopyURLButton_Click(object sender, EventArgs e)
         {
-            // Copy text, if present. If not present, catch exception and update status strip
+            // When "Copy URL" button is clicked, attempt to copy text in URL field to clipboard. If no text present, catch exception. Update status strip accordingly.
             try
             {
                 Clipboard.SetText(FieldInput.Text);
@@ -63,20 +63,27 @@ namespace FacebookIDGrabber
                 OverrideEncoding = Encoding.UTF8
             };
 
+            // TODO: Check if provided URL is a valid Facebook URL.
+            // TODO: Check if provided URL is a mobile Facebook URL. If so, skip to calling GetPageIdMobile method.
             try
             {
+                // Grab page source and store in variable.
                 HtmlAgilityPack.HtmlDocument doc = web.Load(pageUrl);
                 pageSource = doc.Text;
 
+                // Search page source for page ID matches using regular expression.
                 Regex rx = new Regex(@"""(pageID|entity_id)"":""(\d+)""", RegexOptions.Compiled);
                 MatchCollection matches = rx.Matches(pageSource);
 
                 try
-                { 
+                {
+                    // Check for successful match and store in variable if present.
                     pageId = matches[0].Groups[2].Value;
+                    StatusStripLabel.Text = "Page ID found";
                 }
                 catch (ArgumentOutOfRangeException)
                 {
+                    // If no match found, call method to check for the page ID using the mobile URL.
                     try
                     {
                         pageId = GetPageIdMobile(pageUrlMobile);
@@ -86,8 +93,6 @@ namespace FacebookIDGrabber
                         StatusStripLabel.Text = "No page ID found";
                     }
                 }
-
-                StatusStripLabel.Text = "Page ID found";
             }
             catch (UriFormatException)
             {
@@ -97,18 +102,10 @@ namespace FacebookIDGrabber
             {
                 StatusStripLabel.Text = "No page ID found";
             }
-            /*
-            finally
-            {
-                ButtonFindID.Enabled = true;
-                ButtonClearFields.Enabled = true;
-            }
-            */
-
             return pageId;
         }
 
-        
+        // Failsafe for when no page ID is found using the desktop URL.
         private string GetPageIdMobile(string pageUrlMobile)
         {
             StatusStripLabel.Text = "First check for ID failed. Trying mobile version...";
@@ -151,6 +148,7 @@ namespace FacebookIDGrabber
 
         private void ButtonCopyID_Click(object sender, EventArgs e)
         {
+            // When "Copy ID" button is clicked, attempt to copy text in ID field to clipboard. If no text present, catch exception. Update status strip accordingly.
             try
             {
                 Clipboard.SetText(FieldOutput.Text);
